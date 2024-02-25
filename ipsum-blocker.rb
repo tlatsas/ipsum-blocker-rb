@@ -124,5 +124,10 @@ class Iptables
   end
 end
 
+unless Process.uid == 0
+  puts(":: Permissions error. You must run #{File.basename(__FILE__)} as root.")
+  exit 1
+end
+
 # TODO add CLI options
 IpsumBlocker.new(logger: CliLogger.new(verbose: true)).process
