@@ -24,10 +24,11 @@ class CliLogger
 end
 
 class IpsumBlocker
-  attr_reader :logger
+  attr_reader :logger, :save_ipset
 
-  def initialize(logger:)
+  def initialize(logger:, save_ipset:)
     @logger = logger
+    @save_ipset = save_ipset
   end
 
   def process
@@ -56,14 +57,21 @@ class IpsumBlocker
   end
 
   def setup_ipset(ip_addresses:)
-    logger.out("   (1/3) Creating ipset \"#{Ipset::NAME}\"")
+    steps = save_ipset ? 4 : 3
+
+    logger.out("   (1/#{steps}) Creating ipset \"#{Ipset::NAME}\"")
     Ipset.create
 
-    logger.out("   (2/3) Flushing old values")
+    logger.out("   (2/#{steps}) Flushing old values")
     Ipset.flush
 
-    logger.out("   (3/3) Adding new IPs to the set")
+    logger.out("   (3/#{steps}) Adding new IPs to the set")
     Ipset.add_ips_to_set(ip_addresses: ip_addresses)
+
+    if save_ipset
+      logger.out("   (4/#{steps}) Saving ipset in #{Ipset::IPSET_CONF}")
+      Ipset.save
+    end
   end
 
   def setup_iptables(ipset_name:)
@@ -95,6 +103,7 @@ end
 
 class Ipset
   NAME = "ipsum"
+  IPSET_CONF = "/etc/ipset.conf"
 
   class << self
     def create
@@ -109,6 +118,10 @@ class Ipset
       ip_addresses.each do |ip|
         system("ipset -quiet add #{NAME} #{ip}")
       end
+    end
+
+    def save
+      system("ipset save > #{IPSET_CONF}")
     end
   end
 end
@@ -135,6 +148,11 @@ optparse = OptionParser.new do |opts|
     options[:verbose] = false
   end
 
+  options[:save_ipset] = false
+  opts.on("-s", "--save", "Save ipset configuration in #{Ipset::IPSET_CONF}") do
+    options[:save_ipset] = true
+  end
+
   opts.on( '-h', '--help', 'Display this screen' ) do
     puts opts
     exit
@@ -149,4 +167,4 @@ unless Process.uid == 0
 end
 
 logger = CliLogger.new(verbose: options[:verbose])
-IpsumBlocker.new(logger: logger).process
+IpsumBlocker.new(logger: logger, save_ipset: options[:save_ipset]).process
