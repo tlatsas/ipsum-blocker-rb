@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "net/http"
+require "optparse"
 require "logger"
 require "uri"
 
@@ -129,5 +130,15 @@ unless Process.uid == 0
   exit 1
 end
 
-# TODO add CLI options
-IpsumBlocker.new(logger: CliLogger.new(verbose: true)).process
+options = {}
+optparse = OptionParser.new do |opts|
+  options[:verbose] = true
+  opts.on("-q", "--quiet", "Do not run display any output. We default to verbose.") do
+    options[:verbose] = false
+  end
+end
+
+optparse.parse!
+
+logger = CliLogger.new(verbose: options[:verbose])
+IpsumBlocker.new(logger: logger).process
