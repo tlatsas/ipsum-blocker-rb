@@ -1,0 +1,11 @@
+# /etc/systemd/system/ipsum-blocker-rb.timer
+
+[Unit]
+Description=Run ipsum-blocker-rb daily and after each boot
+
+[Timer]
+OnBootSec=5m
+OnCalendar=*-*-* 12:00:00 Europe/Dublin
+
+[Install]
+WantedBy=timers.target

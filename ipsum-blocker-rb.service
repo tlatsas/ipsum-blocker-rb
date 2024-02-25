@@ -1,0 +1,14 @@
+# /etc/systemd/system/ipsum-blocker-rb.service
+
+[Unit]
+Description=Runs ipsum-blocker.rb to create an ipset of IPs to block
+Requires=iptables.service
+After=iptables.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/bin/ruby /opt/ipsum-blocker.rb
+
+[Install]
+WantedBy=multi-user.target
