@@ -97,7 +97,7 @@ class Ipset
 
   class << self
     def create
-      system("ipset -quiet -exists create #{NAME} hash:ip")
+      system("ipset -quiet -exist create #{NAME} hash:ip")
     end
 
     def flush
