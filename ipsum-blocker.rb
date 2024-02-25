@@ -125,20 +125,28 @@ class Iptables
   end
 end
 
-unless Process.uid == 0
-  puts(":: Permissions error. You must run #{File.basename(__FILE__)} as root.")
-  exit 1
-end
+filename = File.basename(__FILE__)
 
 options = {}
 optparse = OptionParser.new do |opts|
+  opts.banner = "Usage: #{filename} [options]"
   options[:verbose] = true
-  opts.on("-q", "--quiet", "Do not run display any output. We default to verbose.") do
+  opts.on("-q", "--quiet", "Do not display any output. We default to verbose.") do
     options[:verbose] = false
+  end
+
+  opts.on( '-h', '--help', 'Display this screen' ) do
+    puts opts
+    exit
   end
 end
 
 optparse.parse!
+
+unless Process.uid == 0
+  puts(":: Permissions error. You must run #{filename} as root.")
+  exit 1
+end
 
 logger = CliLogger.new(verbose: options[:verbose])
 IpsumBlocker.new(logger: logger).process
