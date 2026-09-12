@@ -121,21 +121,20 @@ class Ipset
 
   class << self
     def create
-      system("ipset -quiet -exist create #{NAME} hash:ip")
+      system("ipset", "-quiet", "-exist", "create", NAME, "hash:ip")
     end
 
     def flush
-      system("ipset -quiet flush #{NAME}")
+      system("ipset", "-quiet", "flush", NAME)
     end
-
     def add_ips_to_set(ip_addresses:)
       ip_addresses.each do |ip|
-        system("ipset -quiet add #{NAME} #{ip}")
+        system("ipset", "-quiet", "add", NAME, ip)
       end
     end
 
     def save
-      system("ipset save > #{IPSET_CONF}")
+      system("ipset", "save", out: IPSET_CONF)
     end
   end
 end
@@ -143,11 +142,11 @@ end
 class Iptables
   class << self
     def drop_ipset_rule(ipset_name:)
-      system("iptables -D INPUT -m set --match-set #{ipset_name} src -j DROP 2>/dev/null")
+      system("iptables", "-D", "INPUT", "-m", "set", "--match-set", ipset_name, "src", "-j", "DROP", err: "/dev/null")
     end
 
     def create_ipset_rule(ipset_name:)
-      system("iptables -I INPUT -m set --match-set #{ipset_name} src -j DROP")
+      system("iptables", "-I", "INPUT", "-m", "set", "--match-set", ipset_name, "src", "-j", "DROP")
     end
   end
 end
