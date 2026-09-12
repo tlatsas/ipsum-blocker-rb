@@ -4,6 +4,7 @@ require "net/http"
 require "optparse"
 require "logger"
 require "uri"
+require "ipaddr"
 
 class CliLogger
   def initialize(verbose: true)
@@ -53,7 +54,20 @@ class IpsumBlocker
     logger.out("   (1/1) Downloading ipsum blocklist from Github")
     blocklist.download
 
-    blocklist.ip_addresses
+    blocklist.ip_addresses.filter_map do |ip|
+      begin
+        address = IPAddr.new(ip)
+        if address.ipv4? && address.to_s == ip
+          ip
+        else
+          logger.error("   Skipping invalid IP address: #{ip.inspect}")
+          nil
+        end
+      rescue IPAddr::InvalidAddressError
+        logger.error("   Skipping invalid IP address: #{ip.inspect}")
+        nil
+      end
+    end
   end
 
   def setup_ipset(ip_addresses:)
